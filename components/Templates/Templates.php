@@ -379,6 +379,109 @@ class Pods_Templates extends PodsComponent {
     }
 
     /**
+     * Loads a pods reference via ajax
+     *
+     * @return html table with field references
+     */
+    public function ajax_load_pod() {
+        if(!empty($_POST['_podsfix_pod'])){
+            echo $this->load_pods_fields($_POST['_podsfix_pod'], true);
+        }
+        die;
+    }   
+
+    /**
+     * Load a pods field list
+     *
+     * @param array $fields
+     * @param bool $recursive
+     * @param string $prefix
+     *
+     * @return html rows
+     */ 
+    function build_pod_fieldList($fields, $recursive = null, $prefix = null){
+        
+        $html = null;
+        $isParent = false;
+        foreach($fields as $field=>$details){
+
+
+                $loopkey = '';
+                if('pick' == $details['type']){
+                    if(!empty($details['pod_id'])){
+                        $loopkey = ' pod-field-loop';
+                    }
+                }
+                $html .= '<tr class="pod-field-row'.$loopkey.'"><td class="pod-field-label">'.strtolower($prefix.$details['label']).'</td><td class="pod-field-name" data-tag="'.$recursive.$details['name'].'"><strong class="cm-mustache">{@'.$recursive.$details['name'].'}</strong></td></tr>';
+                if('pick' == $details['type']){
+                    if(!empty($details['table_info']['pod'])){
+                        if(!in_array($details['table_info']['pod']['name'], $this->traversed_pods)){
+                            $this->traversed_pods[] = $details['table_info']['pod']['name'];
+                            $html .= $this->build_pod_fieldList($details['table_info']['pod']['object_fields'], $recursive.$details['name'].'.', $prefix.$details['label'].'.');
+                            $html .= $this->build_pod_fieldList($details['table_info']['pod']['fields'], $recursive.$details['name'].'.', $prefix.$details['label'].'.');
+                        }
+                    }else{
+                        if(!empty($details['pod_id'])){
+                            //if(!in_array($details['pick_val'], $this->traversed_pods)){
+                                //$this->traversed_pods[] = $details['pick_val'];
+                                $relation = pods($details['pick_val']);
+                                if(!empty($relation)){
+                                    $html .= $this->build_pod_fieldList($relation->pod_data['object_fields'], $recursive.$details['name'].'.', $prefix.$details['label'].'.');
+                                    $html .= $this->build_pod_fieldList($relation->fields, $recursive.$details['name'].'.', $prefix.$details['label'].'.');
+                                }
+                            //}
+                        }
+                    }
+                }
+        }
+        if(!empty($recursive)){
+            return $html;
+        }
+        return $html;
+    }
+
+    /**
+     * Load a pods fields and sends it to build_pod_fieldList
+     *
+     * @param string pod name
+     * @param bool $list
+     *
+     * @return html table
+     */ 
+    function load_pods_fields($name, $list = false){
+
+        $pod = pods($name);
+        if(empty($pod)){return;}
+
+        $html = '<table class="wp-list-table widefat"><thead><tr><th>Field</th><th>Magic Tag</th></tr></thead><tbody>';
+
+        $this->traversed_pods[] = $name;
+        if(!empty($list)){          
+            $object_fields = $this->build_pod_fieldList($pod->pod_data['object_fields']);
+        }else{
+            $object_fields = null;
+            if(isset($pod->pod_data['object_fields'])){
+                $supported = array();
+                if(!empty($pod->pod_data['options']['supports_title'])){
+                    $supported['post_title'] = $pod->pod_data['object_fields']['post_title'];
+                    //$return['field']['post_title'] = $pod->pod_data['object_fields']['post_title']['label'];
+                }
+                if(!empty($pod->pod_data['options']['supports_editor'])){
+                    $supported['post_content'] = $pod->pod_data['object_fields']['post_content'];
+                    //$return['field']['post_content'] = $pod->pod_data['object_fields']['post_content']['label'];
+                }
+                if(!empty($supported)){
+                    $object_fields = $this->build_pod_fieldList($supported);
+                    $object_fields = $object_fields;
+                }
+            }
+        }
+        $pod_fields = $this->build_pod_fieldList($pod->fields);
+    
+        return $html.$object_fields.$pod_fields.'</tbody></table>';
+    }
+
+    /**
      * Display the page template
      *
      * @param string $template_name The template name

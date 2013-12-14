@@ -244,8 +244,10 @@ class PodsInit {
         wp_register_style( 'pods-cleditor', PODS_URL . 'ui/css/jquery.cleditor.css', array(), '1.3.0' );
         wp_register_script( 'pods-cleditor', PODS_URL . 'ui/js/jquery.cleditor.min.js', array( 'jquery' ), '1.3.0' );
 
-        wp_register_style( 'pods-codemirror', PODS_URL . 'ui/css/codemirror.css', array(), '2.33' );
-        wp_register_script( 'pods-codemirror', PODS_URL . 'ui/js/codemirror.js', array(), '2.33', true );
+        wp_register_style( 'pods-codemirror', PODS_URL . 'ui/css/codemirror.css', array(), '3.20' );
+        wp_register_script( 'pods-codemirror', PODS_URL . 'ui/js/codemirror-compressed.js', array(), '3.20', true );
+        wp_register_script( 'pods-code-complete', PODS_URL . 'ui/js/pods-code-editor.js', array(), '3.20', true );
+
         wp_register_script( 'pods-codemirror-loadmode', PODS_URL . 'ui/js/codemirror/utils/loadmode.js', array( 'pods-codemirror' ), '2.33', true );
 
         if ( !wp_style_is( 'jquery-ui-timepicker', 'registered' ) )
